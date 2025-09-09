@@ -32,38 +32,38 @@ Generate a one-time, time-limited secret and share it via link or email. After t
 ### Quick start (docker-compose)
 
 ```yaml
-services:
-  db:
-    image: postgres:16
-    environment:
-      POSTGRES_DB: keypasser
-      POSTGRES_USER: keypasser
-      POSTGRES_PASSWORD: change-me
-    volumes:
-      - db:/var/lib/postgresql/data
+ services:
+   db:
+     image: postgres:16-alpine
+     container_name: keypasser-db
+     environment:
+       POSTGRES_DB: change_me
+       POSTGRES_USER: change_me
+       POSTGRES_PASSWORD: change_me
+     volumes:
+       - pgdata:/var/lib/postgresql/data
+     healthcheck:
+       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+       interval: 3s
+       timeout: 3s
+       retries: 10
+     restart: unless-stopped
 
-  keypasser:
-    image: pamsler/keypasser:1.x.x
-    depends_on:
-      - db
-    ports:
-      - "1313:1313"
-    environment:
-      DATABASE_URL: postgres://keypasser:change-me@db:5432/keypasser
-      PORT: "1313"
-      BASE_URL: "https://your.domain.tld"
-      SESSION_SECRET: "long-random-string"
-      MASTER_KEY: "32+ bytes random master key"
-      ADMIN_EMAIL: "admin@your.domain"
-      ADMIN_PASSWORD_HASH: "$2a$10$..."
-      TRUST_PROXY: "1"
-      COOKIE_SECURE: "true"
-    volumes:
-      - uploads:/app/data/uploads
+   keypasser:
+     image: pamsler/keypasser:1.x.x
+     container_name: keypasser-server
+     env_file: .env
+     ports: ["1313:1313"]
+     depends_on:
+       db:
+         condition: service_healthy
+     volumes:
+       - uploads:/app/data
+     restart: unless-stopped
 
-volumes:
-  db:
-  uploads:
+ volumes:
+   pgdata:
+   uploads:
 ```
 
 Open https://your.domain.tld → Settings to configure SMTP and (optionally) Azure/SSO.
