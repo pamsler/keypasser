@@ -1,0 +1,31 @@
+ services:
+   app:
+     build: .
+     env_file: .env
+     ports: ["1313:1313"]
+     depends_on:
+       db:
+         condition: service_healthy
+     volumes:
+       - uploads:/app/data
+       - ./templates:/app/templates:ro
+       - ./public:/app/public:ro
+     restart: unless-stopped
+
+   db:
+     image: postgres:16-alpine
+     environment:
+       POSTGRES_DB: change_me
+       POSTGRES_USER: change_me
+       POSTGRES_PASSWORD: change_me
+     volumes:
+       - pgdata:/var/lib/postgresql/data
+     healthcheck:
+       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+       interval: 3s
+       timeout: 3s
+       retries: 10
+     restart: unless-stopped
+ volumes:
+   pgdata:
+   uploads:
