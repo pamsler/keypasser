@@ -1,0 +1,38 @@
+services:
+  app:
+    image: pamsler/keypasser:${KP_VERSION}
+    container_name: keypasser-server
+    env_file:
+      - .env
+    environment:
+      APP_VERSION: ${KP_VERSION}
+      DOCKERHUB_REPO: ${DOCKERHUB_REPO:-pamsler/keypasser}
+    ports:
+      - "1313:1313"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - uploads:/app/data
+    restart: unless-stopped
+
+  db:
+    image: postgres:16-alpine
+    container_name: keypasser-db
+    environment:
+      POSTGRES_DB: changeme
+      POSTGRES_USER: changeme
+      POSTGRES_PASSWORD: changeme
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  uploads:
+
