@@ -1,20 +1,46 @@
 name: "🐞 Bug report"
 description: Report a problem
-labels: ["bug"]
+title: "[Bug]: "
+labels:
+  - bug
+
 body:
   - type: textarea
     id: what
-    attributes: { label: What happened?, description: Clear description, placeholder: "When I ..." }
-    validations: { required: true }
+    attributes:
+      label: What happened?
+      description: Please describe the problem clearly.
+      placeholder: "When I …"
+    validations:
+      required: true
+
   - type: textarea
     id: repro
-    attributes: { label: Steps to reproduce, placeholder: "1) ...\n2) ...\n3) ..." }
+    attributes:
+      label: Steps to reproduce
+      description: Numbered steps to reproduce the behavior.
+      placeholder: "1) …\n2) …\n3) …"
+    validations:
+      required: true
+
   - type: input
     id: version
-    attributes: { label: KeyPasser version/tag, placeholder: "e.g. 1.2.3 / sha" }
+    attributes:
+      label: KeyPasser version / tag
+      placeholder: "e.g. 1.2.3 (or image tag / commit SHA)"
+    validations:
+      required: true
+
   - type: textarea
     id: env
-    attributes: { label: Environment, placeholder: "Docker, compose, OS, DB version, reverse proxy ..." }
+    attributes:
+      label: Environment
+      description: Docker/Compose, OS, DB version, reverse proxy, etc.
+      placeholder: "Compose snippet or details…"
+
   - type: textarea
     id: logs
-    attributes: { label: Relevant logs, render: shell }
+    attributes:
+      label: Relevant logs
+      description: Please redact any secrets.
+      render: shell
