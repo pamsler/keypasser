@@ -16,6 +16,7 @@ After the first view, the secret is destroyed.
 - **MFA**: TOTP for local accounts with backup codes.
 - **Auditing & stats**: Track who sent what to whom, status (active/used/expired), plus a 14-day activity chart.
 - **UI**: Light/Dark theme, mobile-friendly, minimal Tailwind design.
+- **Localization (i18n)**: UI and emails available in **English** and **German**. Auto-detects browser language (de* → German) and includes a top-bar language switcher; choice is saved per device.
 
 ---
 
@@ -61,7 +62,7 @@ volumes:
   pgdata:
   uploads:
 ```
-➡️ Open https://your.domain.tld and configure SMTP + optional Azure/SSO in Settings.
+➡️ Open https://your.domain.tld, pick your language (🇬🇧/🇩🇪) from the top bar, and configure SMTP + optional Azure/SSO in **Settings**.
 
 ---
 
@@ -216,3 +217,12 @@ echo "Done."
 - Secrets are encrypted in Postgres and deleted on first view or expiry.
 
 - Use app-specific SMTP credentials where possible.
+
+---
+
+## 🌍 Languages
+
+- **Supported:** English (en-GB) and German (de-CH).
+- **Auto-detect:** If no preference is saved, the app detects the browser language (de* → German; otherwise English).
+- **Switcher:** Available on the **top bar** and the **login** screen; persisted per device (localStorage).
+- **Emails:** Subjects and bodies are localized as well.
