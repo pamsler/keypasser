@@ -1,0 +1,15 @@
+name: "✨ Feature request"
+description: Propose an enhancement
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: need
+    attributes: { label: Problem to solve, placeholder: "I need ..." }
+    validations: { required: true }
+  - type: textarea
+    id: proposal
+    attributes: { label: Proposed solution, placeholder: "Add a setting ..." }
+  - type: textarea
+    id: alt
+    attributes: { label: Alternatives considered }
+
