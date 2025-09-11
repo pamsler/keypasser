@@ -1,12 +1,16 @@
 # Security Policy
 
 ## Supported Versions
-We generally support the **latest** released version. Older versions may receive security fixes on a best-effort basis.
 
-| Version | Supported |
-|--------:|:---------:|
-| latest  | ✅        |
-| older   | ⚠️ best-effort |
+We **do not** publish a `latest` tag. Releases are tagged with semantic versions
+(`vX.Y.Z`). Security fixes are provided for the **most recent tagged release**
+(the highest `vX.Y.Z`). Older tags are best-effort only.
+
+| Releases                                   | Supported        |
+|--------------------------------------------|------------------|
+| Highest SemVer tag (current `vX.Y.Z`)      | ✅ Supported     |
+| Any older tag                               | ⚠️ Best-effort   |
+
 
 ## Reporting a Vulnerability
 Please **do not open public issues** for security problems.
