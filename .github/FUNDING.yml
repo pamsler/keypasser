@@ -1,9 +1,3 @@
-# Configure one or more funding platforms.
-# If you don't use GitHub Sponsors, keep "github" empty or remove it.
 github: pamsler
-
-# Add any custom links you prefer (Buy Me a Coffee, PayPal, company page, etc.)
 custom:
   - https://hub.docker.com/r/pamsler/keypasser
-  # - https://buymeacoffee.com/<your-handle>
-  # - https://paypal.me/<your-handle>
