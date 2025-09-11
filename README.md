@@ -8,7 +8,8 @@ After the first view, the secret is destroyed.
 
 ## ✨ Features
 
-- **Secrets**: Encrypted at rest (libsodium `crypto_secretbox` + HKDF). Access tokens are Argon2-hashed.
+- **Secrets**: Encrypted at rest (libsodium `crypto_secretbox` + HKDF). Access tokens are Argon2id-hashed.  
+- **Password layer (optional)**: Add a recipient password; a 32-byte key derived with Argon2id is combined with the base key. The password is never stored in plaintext (Argon2id hash + random salt).
 - **TTL + one-time**: Links expire automatically and are deleted on first view.
 - **Delivery**: Built-in SMTP (STARTTLS/587 or SMTPS/465) with custom subject/message and optional branded logo.
 - **Auth modes**: Local accounts or Microsoft Entra ID (Azure AD) SSO. Optional group gates for access/admin.
@@ -209,6 +210,13 @@ echo "Done."
 
 ---
 
+## 🔐 Password-protected secrets (optional)
+- In **Create new secret**, fill **“Additional password (optional)”**.  
+- The email/link never contains the password; the recipient must enter it on the viewing page.  
+- Server stores only an Argon2id hash and a random salt and derives a 32-byte key (combined with HKDF) for encryption.
+
+---
+
 ## 🔐 Security notes
 - Always run behind HTTPS and set COOKIE_SECURE=true.
 
@@ -218,6 +226,8 @@ echo "Done."
 
 - Use app-specific SMTP credentials where possible.
 
+- If you set a password, share it out-of-band (chat/phone) and prefer a strong passphrase.
+
 ---
 
 ## 🌍 Languages
@@ -226,3 +236,11 @@ echo "Done."
 - **Auto-detect:** If no preference is saved, the app detects the browser language (de* → German; otherwise English).
 - **Switcher:** Available on the **top bar** and the **login** screen; persisted per device (localStorage).
 - **Emails:** Subjects and bodies are localized as well.
+
+---
+
+## Bugs & Support
+- Report a bug: https://github.com/pamsler/keypasser/issues/new?labels=bug&template=bug_report.yml&title=%5Bbug%5D%3A+  
+- Feature request: https://github.com/pamsler/keypasser/issues/new?labels=enhancement&template=feature_request.yml&title=%5Bfeat%5D%3A+  
+- Discussions (Q&A): https://github.com/pamsler/keypasser/discussions  
+- Security: see https://github.com/pamsler/keypasser/security/policy
