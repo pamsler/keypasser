@@ -1,9 +1,0 @@
-blank_issues_enabled: false
-contact_links:
-  - name: 💬 Discussions (Q&A / ideas)
-    url: https://github.com/pamsler/keypasser/discussions
-    about: Ask questions or discuss ideas here.
-  - name: 🔐 Security policy
-    url: https://github.com/pamsler/keypasser/security/policy
-    about: Report security issues following the policy.
-
