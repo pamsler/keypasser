@@ -16,6 +16,7 @@ After the first view, the secret is destroyed.
 - **User management**: Local users (passwords) + SSO users (read-only).
 - **MFA**: TOTP for local accounts with backup codes.
 - **Auditing & stats**: Track who sent what to whom, status (active/used/expired), plus a 14-day activity chart.
+- **Reports export**: Export the activity report as **CSV**, **PDF** (portrait/landscape), or **XLSX** for a custom date range.
 - **UI**: Light/Dark theme, mobile-friendly, minimal Tailwind design.
 - **Localization (i18n)**: UI and emails available in **English** and **German**. Auto-detects browser language (de* → German) and includes a top-bar language switcher; choice is saved per device.
 - **Files (one-time downloads)**: Send a file as a one-time link. The file is encrypted at rest, can be protected by an optional password, and is wiped after the first successful download or expiry.
@@ -245,6 +246,17 @@ echo "Done."
 - **Auto-detect:** If no preference is saved, the app detects the browser language (de* → German; otherwise English).
 - **Switcher:** Available on the **top bar** and the **login** screen; persisted per device (localStorage).
 - **Emails:** Subjects and bodies are localized as well.
+
+---
+
+## 📊 Activity reports (CSV / PDF / XLSX)
+
+- Go to Settings → General.
+- Pick a date range and format:
+- CSV — raw data (UTC timestamps in ISO 8601).
+- PDF — printable table; choose portrait or landscape.
+- XLSX — nicely formatted Excel table.
+- Click Export to download.
 
 ---
 
