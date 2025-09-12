@@ -18,6 +18,7 @@ After the first view, the secret is destroyed.
 - **Auditing & stats**: Track who sent what to whom, status (active/used/expired), plus a 14-day activity chart.
 - **UI**: Light/Dark theme, mobile-friendly, minimal Tailwind design.
 - **Localization (i18n)**: UI and emails available in **English** and **German**. Auto-detects browser language (de* → German) and includes a top-bar language switcher; choice is saved per device.
+- **Files (one-time downloads)**: Send a file as a one-time link. The file is encrypted at rest, can be protected by an optional password, and is wiped after the first successful download or expiry.
 
 ---
 
@@ -210,10 +211,18 @@ echo "Done."
 
 ---
 
-## 🔐 Password-protected secrets (optional)
-- In **Create new secret**, fill **“Additional password (optional)”**.  
-- The email/link never contains the password; the recipient must enter it on the viewing page.  
-- Server stores only an Argon2id hash and a random salt and derives a 32-byte key (combined with HKDF) for encryption.
+## 🔐 Password-protected secrets & files (optional)
+- In **Create new secret** or **Send file**, fill **“Additional password (optional)”**.  
+- The email/link never contains the password; the recipient must enter it on the viewing/unlock page.  
+- Server stores only an Argon2id hash + random salt and derives a 32-byte key (combined with HKDF) for encryption.
+
+---
+
+## 📂 One-time file downloads
+- Upload a file in the UI.  
+- Optionally set a recipient password.  
+- Recipient opens the link: if password-protected, an unlock form is shown; on success a **single** download is enabled.  
+- After the first successful download (or on expiry) the encrypted blob is deleted.
 
 ---
 
@@ -222,7 +231,7 @@ echo "Done."
 
 - Keep MASTER_KEY and SESSION_SECRET secret and persistent.
 
-- Secrets are encrypted in Postgres and deleted on first view or expiry.
+- Files are encrypted on disk and deleted on first successful download or expiry.
 
 - Use app-specific SMTP credentials where possible.
 
