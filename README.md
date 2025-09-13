@@ -1,25 +1,7 @@
 # 🔒 KeyPasser
 
-Send sensitive information once — securely.  
-Generate a one-time, time-limited secret and share it via link or email.  
-After the first view, the secret is destroyed.
-
----
-
-## ✨ Features
-
-- **Secrets**: Encrypted at rest (libsodium `crypto_secretbox` + HKDF). Access tokens are Argon2id-hashed.  
-- **Password layer (optional)**: Add a recipient password; a 32-byte key derived with Argon2id is combined with the base key. The password is never stored in plaintext (Argon2id hash + random salt).
-- **TTL + one-time**: Links expire automatically and are deleted on first view.
-- **Delivery**: Built-in SMTP (STARTTLS/587 or SMTPS/465) with custom subject/message and optional branded logo.
-- **Auth modes**: Local accounts or Microsoft Entra ID (Azure AD) SSO. Optional group gates for access/admin.
-- **User management**: Local users (passwords) + SSO users (read-only).
-- **MFA**: TOTP for local accounts with backup codes.
-- **Auditing & stats**: Track who sent what to whom, status (active/used/expired), plus a 14-day activity chart.
-- **Reports export**: Export the activity report as **CSV**, **PDF** (portrait/landscape), or **XLSX** for a custom date range.
-- **UI**: Light/Dark theme, mobile-friendly, minimal Tailwind design.
-- **Localization (i18n)**: UI and emails available in **English** and **German**. Auto-detects browser language (de* → German) and includes a top-bar language switcher; choice is saved per device.
-- **Files (one-time downloads)**: Send a file as a one-time link. The file is encrypted at rest, can be protected by an optional password, and is wiped after the first successful download or expiry.
+One-time secrets & files — secure, simple, self-hosted.
+Send a link (or email) that auto-expires and is destroyed on first access. Local login or Microsoft Entra ID (Azure AD) SSO.
 
 ---
 
@@ -69,25 +51,66 @@ volumes:
 
 ---
 
+## ✨ Features
+
+- Encrypted at rest (libsodium crypto_secretbox + HKDF); tokens Argon2id-hashed
+
+- Optional recipient password (Argon2id-derived key combined with base key)
+
+- TTL + one-time links (auto delete on first view/download)
+
+- Built-in SMTP (587/465), custom subject/message, optional branded logo
+
+- Auth: Local accounts or Entra ID SSO; optional group gates (access/admin)
+
+- MFA (TOTP + backup codes) for local users
+
+- Auditing & stats, 14-day chart; Reports export (CSV / PDF / XLSX)
+
+- Clean Tailwind UI, dark/light, EN & DE (auto-detect + switcher)
+
+- One-time files (encrypted on disk, wiped after first download/expiry)
+
+---
+
+
 ## ⚙️ Environment (.env)
+
+**Note:** Keep `MASTER_KEY` & `SESSION_SECRET` stable and secret. In Docker, double every `$` in bcrypt hashes.
+
+| Key | Required | Example | Notes |
+|---|---|---|---|
+| `PORT` | no | `1313` | Container listens here |
+| `DATABASE_URL` | yes | `postgres://user:pass@db:5432/keypasser` | Postgres 13+ |
+| `SESSION_SECRET` | yes | `long random` | Session HMAC |
+| `MASTER_KEY` | yes | `32+ bytes` | Derives encryption keys (HKDF) |
+| `BASE_URL` | yes | `https://your.domain.tld` | Used in links/emails & CSRF origin check |
+| `COOKIE_SECURE` | recommended | `true` | Set `false` only without HTTPS/proxy |
+| `TRUST_PROXY` | optional | `1` | If behind reverse proxy |
+| `ADMIN_EMAIL` | optional | `admin@example.com` | Seed/ensure admin |
+| `ADMIN_PASSWORD_HASH` | optional | `$$2a$$12$$...` | bcrypt, `$` doubled |
+| `ADMIN_USERNAME` | optional | `admin` | Only set if seeding admin |
+| `ADMIN_FIRST_NAME` | optional | `Admin` | 〃 |
+| `ADMIN_LAST_NAME` | optional | `User` | 〃 |
+| `KP_VERSION` | optional | `x.y.z` | Image tag (semver) |
+| `DOCKERHUB_REPO` | optional | `pamsler/keypasser` | Used by update checker |
 
 ```env
 PORT=1313
-DATABASE_URL=postgres://user:pass@db:5432/keypasserdb
-SESSION_SECRET=long-random-string
-MASTER_KEY=32-byte-or-longer-secret
+DATABASE_URL=postgres://keypasser:change_me@db:5432/keypasser
+SESSION_SECRET=change_this_long_random_string
+MASTER_KEY=change_this_even_longer_random_secret
 BASE_URL=https://your.domain.tld
-
-# For LAN access, e.g.:
-# BASE_URL=http://192.168.1.50:1313
-
-# Cookie security (set false if running without HTTPS/proxy)
 COOKIE_SECURE=true
 TRUST_PROXY=1
 
-# Admin seed (optional, bcrypt hash with doubled $$)
+
+# Admin seed (optional; bcrypt, $ doubled)
 ADMIN_EMAIL=admin@example.com
 ADMIN_PASSWORD_HASH=$$2a$$12$$...
+ADMIN_USERNAME=admin
+ADMIN_FIRST_NAME=Admin
+ADMIN_LAST_NAME=User
 
 # Image tag / version
 KP_VERSION=x.x.x
@@ -99,29 +122,21 @@ DOCKERHUB_REPO=pamsler/keypasser
 ## 🔑 Generate an admin hash
 
 ```bash
-npm install bcryptjs
+npm i bcryptjs
 ```
 
 hash.js
 ```js
-#!/usr/bin/env node
 import bcrypt from "bcryptjs";
-
-const password = process.argv[2];
-if (!password) {
-  console.error("Usage: node hash.js <password>");
-  process.exit(1);
-}
-
-const hash = bcrypt.hashSync(password, 12);
-// Docker-safe: double all '$'
-console.log(hash.replace(/\$/g, "$$$$"));
+const pwd = process.argv[2];
+if (!pwd) { console.error("Usage: node hash.js <password>"); process.exit(1); }
+const hash = bcrypt.hashSync(pwd, 12);
+console.log(hash.replace(/\$/g, "$$$$")); // Docker-safe
 ```
 
 Run:
 ```bash
-node hash.js "super-secret-password"
-# -> $$2a$$12$$...   (paste into ADMIN_PASSWORD_HASH)
+node hash.js "super-secret"   # -> $$2a$$12$$...
 ```
 
 ---
@@ -131,24 +146,15 @@ verify.js
 ```js
 #!/usr/bin/env node
 import bcrypt from "bcryptjs";
-
-const [ , , plain, hash ] = process.argv;
-if (!plain || !hash) {
-  console.error("Usage: node verify.js <plain> <hash>");
-  process.exit(1);
-}
-
-(async () => {
-  const ok = await bcrypt.compare(plain, hash);
-  console.log(ok ? "OK" : "FAIL");
-})();
+const [, , plain, hash] = process.argv;
+if (!plain || !hash) { console.error("Usage: node verify.js <plain> <hash>"); process.exit(1); }
+bcrypt.compare(plain, hash).then(ok => console.log(ok ? "OK" : "FAIL"));
 ```
 Run:
 ```bash
 node verify.js 'super-secret-password' '$$2a$$12$$...'
 # -> OK
 ```
-
 ---
 
 ## 🔄 Update script
@@ -204,59 +210,23 @@ echo "Done."
 
 ## ✉️ SMTP
 
-- Configure via UI (/settings).
+- Configure via Settings → SMTP
 
 - Supports STARTTLS/587 and SMTPS/465.
 
-- Custom sender, TLS enforcement, and optional logo attachment.
-
----
-
-## 🔐 Password-protected secrets & files (optional)
-- In **Create new secret** or **Send file**, fill **“Additional password (optional)”**.  
-- The email/link never contains the password; the recipient must enter it on the viewing/unlock page.  
-- Server stores only an Argon2id hash + random salt and derives a 32-byte key (combined with HKDF) for encryption.
-
----
-
-## 📂 One-time file downloads
-- Upload a file in the UI.  
-- Optionally set a recipient password.  
-- Recipient opens the link: if password-protected, an unlock form is shown; on success a **single** download is enabled.  
-- After the first successful download (or on expiry) the encrypted blob is deleted.
-
----
-
-## 🔐 Security notes
-- Always run behind HTTPS and set COOKIE_SECURE=true.
-
-- Keep MASTER_KEY and SESSION_SECRET secret and persistent.
-
-- Files are encrypted on disk and deleted on first successful download or expiry.
-
-- Use app-specific SMTP credentials where possible.
-
-- If you set a password, share it out-of-band (chat/phone) and prefer a strong passphrase.
+- Custom sender, enforce TLS, optional inline logo
 
 ---
 
 ## 🌍 Languages
 
-- **Supported:** English (en-GB) and German (de-CH).
-- **Auto-detect:** If no preference is saved, the app detects the browser language (de* → German; otherwise English).
-- **Switcher:** Available on the **top bar** and the **login** screen; persisted per device (localStorage).
-- **Emails:** Subjects and bodies are localized as well.
+EN (en-GB) & DE (de-CH). Auto-detect + switcher on login/top-bar. Emails localized.
 
 ---
 
-## 📊 Activity reports (CSV / PDF / XLSX)
+## 📊 Reports (CSV / PDF / XLSX)
 
-- Go to Settings → General.
-- Pick a date range and format:
-- CSV — raw data (UTC timestamps in ISO 8601).
-- PDF — printable table; choose portrait or landscape.
-- XLSX — nicely formatted Excel table.
-- Click Export to download.
+Export activity by date range (portrait/landscape PDF, nicely formatted XLSX).
 
 ---
 
