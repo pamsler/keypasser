@@ -30,7 +30,6 @@ services:
     container_name: keypasser-server
     env_file:
       - .env
-      - app.env
     environment:
       APP_VERSION: ${KP_VERSION}
       DOCKERHUB_REPO: ${DOCKERHUB_REPO:-pamsler/keypasser}
@@ -82,8 +81,6 @@ volumes:
 |---|---|---|---|
 | `PORT` | no | `1313` | Container listens here |
 | `DATABASE_URL` | yes | `postgres://user:pass@db:5432/keypasser` | Postgres 13+ |
-| `SESSION_SECRET` | yes | `long random` | Session HMAC |
-| `MASTER_KEY` | yes | `32+ bytes` | Derives encryption keys (HKDF) |
 | `BASE_URL` | yes | `https://your.domain.tld` | Used in links/emails & CSRF origin check |
 | `COOKIE_SECURE` | recommended | `true` | Set `false` only without HTTPS/proxy |
 | `TRUST_PROXY` | optional | `1` | If behind reverse proxy |
@@ -98,8 +95,8 @@ volumes:
 ```env
 PORT=1313
 DATABASE_URL=postgres://keypasser:change_me@db:5432/keypasser
-SESSION_SECRET=change_this_long_random_string
-MASTER_KEY=change_this_even_longer_random_secret
+ROTATE_SESSION_SECRET_DAYS=90
+ROTATE_MASTER_KEY_DAYS=180
 BASE_URL=https://your.domain.tld
 COOKIE_SECURE=true
 TRUST_PROXY=1
