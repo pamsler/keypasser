@@ -5,22 +5,30 @@ ENV_FILE="${ENV_FILE:-.env}"
 COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.yml}"
 
 has() { command -v "$1" >/dev/null 2>&1; }
-env_get() { grep -E "^$1=" "$ENV_FILE" 2>/dev/null | tail -n1 | cut -d= -f2- || true; }
+
+env_get() {
+  local key="$1"
+  sed -nE "s/^${key}=(.*)/\1/p" "$ENV_FILE" | tail -n1 || true
+}
+
 semvers_only() { grep -E '^[vV]?[0-9]+\.[0-9]+\.[0-9]+([+-].*)?$' | sed -E 's/^[vV]//' ; }
+
 pick_max() { sort -V | tail -n1; }
 
-DC="docker compose"; $DC version >/dev/null 2>&1 || DC="docker-compose"
+DC="docker compose"
+$DC version >/dev/null 2>&1 || DC="docker-compose"
 
 REPO="${DOCKERHUB_REPO:-$(env_get DOCKERHUB_REPO)}"
 REPO="${REPO:-pamsler/keypasser}"
 CUR="$(env_get KP_VERSION)"; CUR="${CUR:-0.0.0}"
+TO_TAG=""
+CHECK_ONLY=0
 
-TO_TAG=""; CHECK_ONLY=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --to) TO_TAG="${2:-}"; shift 2 ;;
     --check) CHECK_ONLY=1; shift ;;
-    *) echo "Unknown argument: $1" >&2; exit 2 ;;
+    *) echo "Unknown arg: $1" >&2; exit 2 ;;
   esac
 done
 
@@ -38,6 +46,7 @@ fetch_ns_all() {
     page=$((page+1))
   done | sed '/^$/d' | sort -u
 }
+
 fetch_registry_all() {
   local tok
   tok="$(curl -fsSL "https://auth.docker.io/token?service=registry.docker.io&scope=repository:${REPO}:pull" \
@@ -48,33 +57,44 @@ fetch_registry_all() {
   | tr '[],"' '\n' | sed -n 's/^[[:space:]]*\([^[:space:]]\+\)[[:space:]]*$/\1/p' \
   | sed -n '1,/^tags$/d;p' | sed '/^$/d' | sort -u
 }
+
 get_latest() { { fetch_ns_all || true; fetch_registry_all || true; } | semvers_only | pick_max; }
 
 LATEST="${TO_TAG:-$(get_latest)}"
-[ -n "$LATEST" ] || { echo "Could not fetch tags (Repo: $REPO)"; exit 2; }
+[ -n "$LATEST" ] || { echo "Konnte keine Tags abrufen (Repo: $REPO)"; exit 2; }
 
 if [ "$CHECK_ONLY" -eq 1 ]; then
-  echo "Repo:   $REPO"
-  echo "Local:  $CUR"
+  echo "Repo: $REPO"
+  echo "Local: $CUR"
   echo "Remote: $LATEST"
   exit 0
 fi
 
 if [ -z "$TO_TAG" ]; then
   if [ "$CUR" = "$LATEST" ] || [ "$(printf '%s\n%s\n' "$CUR" "$LATEST" | sort -V | tail -n1)" = "$CUR" ]; then
-    echo "Already up to date ($CUR)."
+    echo "Already latest ($CUR)."
     exit 0
   fi
 fi
 
 echo "Update: $CUR -> $LATEST"
+
 if grep -qE '^KP_VERSION=' "$ENV_FILE" 2>/dev/null; then
   sed -i.bak -E "s/^KP_VERSION=.*/KP_VERSION=$LATEST/" "$ENV_FILE"
 else
   echo "KP_VERSION=$LATEST" >> "$ENV_FILE"
 fi
+
 grep -qE '^DOCKERHUB_REPO=' "$ENV_FILE" 2>/dev/null || echo "DOCKERHUB_REPO=$REPO" >> "$ENV_FILE"
 
-$DC -f "$COMPOSE_FILE" pull app
-$DC -f "$COMPOSE_FILE" up -d app
+TEMP_ENV=$(mktemp)
+cp "$ENV_FILE" "$TEMP_ENV"
+sed -i.bak -E 's/^(ADMIN_PASSWORD_HASH=)([^"].*[^"])$/\1"\2"/' "$TEMP_ENV"
+sed -i.bak -E 's/^(ADMIN_PASSWORD_HASH=.*)\$/\1\\$/' "$TEMP_ENV"
+
+$DC -f "$COMPOSE_FILE" --env-file "$TEMP_ENV" pull app
+$DC -f "$COMPOSE_FILE" --env-file "$TEMP_ENV" up -d app
+
+rm -f "$TEMP_ENV" "$TEMP_ENV.bak"
+
 echo "Done."
