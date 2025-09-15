@@ -40,11 +40,14 @@ services:
         condition: service_healthy
     volumes:
       - uploads:/app/data
+      - clamdb:/var/lib/clamav
     restart: unless-stopped
 
 volumes:
   pgdata:
   uploads:
+  clamdb:
+
 ```
 ➡️ Open https://your.domain.tld, pick your language (🇬🇧/🇩🇪) from the top bar, and configure SMTP + optional Azure/SSO in **Settings**.
 
