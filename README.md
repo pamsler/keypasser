@@ -85,7 +85,7 @@ volumes:
 | `COOKIE_SECURE` | recommended | `true` | Set `false` only without HTTPS/proxy |
 | `TRUST_PROXY` | optional | `1` | If behind reverse proxy |
 | `ADMIN_EMAIL` | optional | `admin@example.com` | Seed/ensure admin |
-| `ADMIN_PASSWORD_HASH` | optional | `$$2a$$12$$...` | bcrypt, `$` doubled |
+| `ADMIN_PASSWORD_HASH` | optional | `$argon2id$...` |
 | `ADMIN_USERNAME` | optional | `admin` | Only set if seeding admin |
 | `ADMIN_FIRST_NAME` | optional | `Admin` | 〃 |
 | `ADMIN_LAST_NAME` | optional | `User` | 〃 |
@@ -116,24 +116,37 @@ DOCKERHUB_REPO=pamsler/keypasser
 ---
 
 
-## 🔑 Generate an admin hash
+## 🔑 Generate an admin hash (Argon2id)
 
 ```bash
-npm i bcryptjs
+npm i argon2
 ```
 
 hash.js
 ```js
-import bcrypt from "bcryptjs";
-const pwd = process.argv[2];
-if (!pwd) { console.error("Usage: node hash.js <password>"); process.exit(1); }
-const hash = bcrypt.hashSync(pwd, 12);
-console.log(hash.replace(/\$/g, "$$$$")); // Docker-safe
+#!/usr/bin/env node
+import argon2 from "argon2";
+ 
+ const password = process.argv[2];
+ if (!password) {
+   console.error("Bitte Passwort als Argument angeben");
+   process.exit(1);
+ }
+
+// gleiche Tuning-Parameter wie der Server (A2_STORE)
+const hash = await argon2.hash(password, {
+  type: argon2.argon2id,
+  memoryCost: 19456,  // ~19 MiB
+  timeCost: 3,
+  parallelism: 1
+});
+console.log(hash.replace(/\$/g, "$$$$")); // Dollar verdoppeln für .env/docker
+
 ```
 
 Run:
 ```bash
-node hash.js "super-secret"   # -> $$2a$$12$$...
+node hash.js "super-secret"   # -> $argon2id$...
 ```
 
 ---
@@ -142,14 +155,36 @@ node hash.js "super-secret"   # -> $$2a$$12$$...
 verify.js
 ```js
 #!/usr/bin/env node
+import argon2 from "argon2";
 import bcrypt from "bcryptjs";
-const [, , plain, hash] = process.argv;
-if (!plain || !hash) { console.error("Usage: node verify.js <plain> <hash>"); process.exit(1); }
-bcrypt.compare(plain, hash).then(ok => console.log(ok ? "OK" : "FAIL"));
+ 
+const [ , , plain, hash ] = process.argv;
+ if (!plain || !hash) {
+   console.error("Usage: node verify.js <plain> <hash>");
+   process.exit(1);
+ }
+ 
+try {
+  let ok = false;
+  if (hash.startsWith("$argon2id$")) {
+    ok = await argon2.verify(hash, plain);
+  } else if (hash.startsWith("$2a$") || hash.startsWith("$2b$") || hash.startsWith("$2y$")) {
+    ok = await bcrypt.compare(plain, hash);
+  } else {
+    // Fallback: zuerst Argon2, dann bcrypt probieren
+    try { ok = await argon2.verify(hash, plain); } catch {}
+    if (!ok) { try { ok = await bcrypt.compare(plain, hash); } catch {} }
+  }
+  console.log(ok ? "OK" : "FAIL");
+} catch (e) {
+  console.error("Error:", e.message);
+  process.exit(1);
+}
+
 ```
 Run:
 ```bash
-node verify.js 'super-secret-password' '$$2a$$12$$...'
+node verify.js 'super-secret-password' '$argon2id$...'
 # -> OK
 ```
 ---
