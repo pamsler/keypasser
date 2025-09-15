@@ -104,7 +104,7 @@ TRUST_PROXY=1
 
 # Admin seed (optional; bcrypt, $ doubled)
 ADMIN_EMAIL=admin@example.com
-ADMIN_PASSWORD_HASH=$$2a$$12$$...
+ADMIN_PASSWORD_HASH=$$argon2id$$...
 ADMIN_USERNAME=admin
 ADMIN_FIRST_NAME=Admin
 ADMIN_LAST_NAME=User
