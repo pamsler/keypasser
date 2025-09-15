@@ -52,23 +52,15 @@ volumes:
 
 ## ✨ Features
 
-- Encrypted at rest (libsodium crypto_secretbox + HKDF); tokens Argon2id-hashed
-
-- Optional recipient password (Argon2id-derived key combined with base key)
-
-- TTL + one-time links (auto delete on first view/download)
-
-- Built-in SMTP (587/465), custom subject/message, optional branded logo
-
-- Auth: Local accounts or Entra ID SSO; optional group gates (access/admin)
-
-- MFA (TOTP + backup codes) for local users
-
-- Auditing & stats, 14-day chart; Reports export (CSV / PDF / XLSX)
-
-- Clean Tailwind UI, dark/light, EN & DE (auto-detect + switcher)
-
-- One-time files (encrypted on disk, wiped after first download/expiry)
+- **Secure Encryption**: Data encrypted at rest using `libsodium` (`crypto_secretbox`) with `HKDF`-derived keys. User passwords and tokens hashed with `Argon2id` (memoryCost: 19MiB, timeCost: 3, parallelism: 1).
+- **Password-Protected Secrets**: Optional recipient password with `Argon2id`-derived key combined with base key.
+- **One-Time Links**: Links with configurable TTL (1 min to 24h) auto-delete after first view/download or expiry.
+- **SMTP Integration**: Supports SMTP (587/465) with custom subject/message and optional branded logo in emails.
+- **Authentication**: Local accounts or Entra ID SSO. Optional group-based access control for users and admins.
+- **Multi-Factor Authentication**: TOTP with backup codes for local accounts.
+- **Auditing & Reporting**: Audit logs, 14-day activity charts, and exportable reports in CSV, PDF, or XLSX formats.
+- **User Interface**: Clean, responsive Tailwind CSS UI with dark/light modes and EN/DE language support (auto-detect + switcher).
+- **One-Time File Sharing**: Encrypted file uploads (up to 20MB) with one-time download and auto-deletion.
 
 ---
 
