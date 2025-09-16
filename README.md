@@ -93,9 +93,6 @@ volumes:
 | `ADMIN_LAST_NAME` | optional | `User` | 〃 |
 | `KP_VERSION` | optional | `x.y.z` | Image tag (semver) |
 | `DOCKERHUB_REPO` | optional | `pamsler/keypasser` | Used by update checker |
-| `BLOCK_DANGEROUS_FILES` | optional | true | Reject common executable extensions on upload |
-| `ALERT_MALWARE_TO` | optional | security@example.com | Override alert recipient; defaults to ADMIN_EMAIL |
-| `CLAMAV_HOST` / `CLAMAV_PORT` / `CLAMAV_SOCKET` | optional | 127.0.0.1 / 3310 / /var/run/clamav/clamd.ctl | Advanced: talk to external clamd (defaults work in-container) |
 ```env
 PORT=1313
 DATABASE_URL=postgres://keypasser:change_me@db:5432/keypasser
