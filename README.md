@@ -32,6 +32,7 @@ services:
     env_file:
       - .env
     environment:
+      APP_VERSION: ${KP_VERSION}
       DOCKERHUB_REPO: ${DOCKERHUB_REPO:-pamsler/keypasser}
     ports:
       - "1313:1313"
