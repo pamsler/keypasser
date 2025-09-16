@@ -1,7 +1,8 @@
 # 🔒 KeyPasser
 
-One-time secrets & files — secure, simple, self-hosted.
-Send a link (or email) that auto-expires and is destroyed on first access. Local login or Microsoft Entra ID (Azure AD) SSO.
+One-time secrets & files — secure, simple, self-hosted.  
+Now with **integrated ClamAV malware scanning** and **admin alerts** on blocked uploads.  
+Send a link (or email) that auto-expires and is destroyed on first access. Local login or icrosoft Entra ID (Azure AD) SSO.
 
 ---
 
@@ -51,6 +52,10 @@ volumes:
 ```
 ➡️ Open https://your.domain.tld, pick your language (🇬🇧/🇩🇪) from the top bar, and configure SMTP + optional Azure/SSO in **Settings**.
 
+### Notes
+- The clamdb volume caches antivirus signature databases between restarts (faster startup).
+- The container updates signatures automatically in the background; allow outbound access to database.clamav.net.
+
 ---
 
 ## ✨ Features
@@ -64,6 +69,8 @@ volumes:
 - **Auditing & Reporting**: Audit logs, 14-day activity charts, and exportable reports in CSV, PDF, or XLSX formats.
 - **User Interface**: Clean, responsive Tailwind CSS UI with dark/light modes and EN/DE language support (auto-detect + switcher).
 - **One-Time File Sharing**: Encrypted file uploads (up to 20MB) with one-time download and auto-deletion.
+- Malware Scanning & File-Type Blocking: Uploads are streamed to ClamAV (clamd); EICAR and known malware are blocked.
+- Admin Notifications: When a malicious file is detected, an alert email is sent to the default admin (ADMIN_EMAIL) with user, file name/type/size, IP, and timestamp. Localized EN/DE.
 
 ---
 
@@ -86,7 +93,9 @@ volumes:
 | `ADMIN_LAST_NAME` | optional | `User` | 〃 |
 | `KP_VERSION` | optional | `x.y.z` | Image tag (semver) |
 | `DOCKERHUB_REPO` | optional | `pamsler/keypasser` | Used by update checker |
-
+| `BLOCK_DANGEROUS_FILES` | optional | true | Reject common executable extensions on upload |
+| `ALERT_MALWARE_TO` | optional | security@example.com | Override alert recipient; defaults to ADMIN_EMAIL |
+| `CLAMAV_HOST` / `CLAMAV_PORT` / `CLAMAV_SOCKET` | optional | 127.0.0.1 / 3310 / /var/run/clamav/clamd.ctl | Advanced: talk to external clamd (defaults work in-container) |
 ```env
 PORT=1313
 DATABASE_URL=postgres://keypasser:change_me@db:5432/keypasser
@@ -307,6 +316,21 @@ EN (en-GB) & DE (de-CH). Auto-detect + switcher on login/top-bar. Emails localiz
 ## 📊 Reports (CSV / PDF / XLSX)
 
 Export activity by date range (portrait/landscape PDF, nicely formatted XLSX).
+
+---
+
+## 🛡️ Malware scanning & admin alerts
+
+- How it works: On upload, files are streamed to the embedded clamd via INSTREAM. If a signature is found, the upload is rejected (malware_detected) and nothing is stored.
+- Dangerous extensions: With BLOCK_DANGEROUS_FILES=true, risky file types (e.g. .exe, .bat, .ps1, .js, .vbs, …) are rejected even before scanning.
+- Admin alert: An email is sent to ADMIN_EMAIL (or ALERT_MALWARE_TO if set) including:
+
+user (local or SSO), file name/type/size, request IP, and timestamp
+
+localized content (English/German)
+- Signatures: The clamdb volume persists databases; freshclam runs in the background to keep them current.
+
+> Tip: You can test the setup with the EICAR test file: https://www.eicar.org/download-anti-malware-testfile/
 
 ---
 
