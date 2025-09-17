@@ -10,23 +10,7 @@ Send a link (or email) that auto-expires and is destroyed on first access. Local
 
 ```yaml
 services:
-  db:
-    image: postgres:16-alpine
-    container_name: keypasser-db
-    environment:
-      POSTGRES_DB: change_me
-      POSTGRES_USER: change_me
-      POSTGRES_PASSWORD: change_me
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
-      interval: 3s
-      timeout: 3s
-      retries: 10
-    restart: unless-stopped
-
-  keypasser:
+  app:
     image: pamsler/keypasser:${KP_VERSION}
     container_name: keypasser-server
     env_file:
@@ -42,19 +26,70 @@ services:
     volumes:
       - uploads:/app/data
       - clamdb:/var/lib/clamav
+      - keypasser_data:/data
+    restart: unless-stopped
+
+  db:
+    image: postgres:16-alpine
+    container_name: keypasser-db
+    environment:
+      POSTGRES_DB: keypasserdb
+      POSTGRES_USER: pascaldbuser
+      POSTGRES_PASSWORD: MqII45IhSGXBTZshUz8OxgQsEyk6sckS
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
     restart: unless-stopped
 
 volumes:
   pgdata:
   uploads:
   clamdb:
+  keypasser_data:
 
 ```
-➡️ Open https://your.domain.tld, pick your language (🇬🇧/🇩🇪) from the top bar, and configure SMTP + optional Azure/SSO in **Settings**.
+➡️ Open https://your.domain.tld, choose your language (EN/DE), and follow the First-Run Setup wizard.
 
 ### Notes
-- The clamdb volume caches antivirus signature databases between restarts (faster startup).
-- The container updates signatures automatically in the background; allow outbound access to database.clamav.net.
+- `clamdb` caches antivirus signatures between restarts (faster startup). Allow outbound to `database.clamav.net`
+- `keypasser_data` persists `/data/config.json` which stores DB connection and setup state.
+
+---
+
+## 🧭 First-Run Setup (wizard)
+On a fresh, empty instance KeyPasser starts in setup mode:
+
+Select language.
+
+- Database: enter Postgres connection → migrations run → saved to /data/config.json.
+
+- Create/ensure admin (local account).
+
+- Finish: the app leaves setup mode immediately (no container restart required).
+
+- Configure SMTP and optional Azure/SSO in Settings; upload your logo.
+
+> The wizard requires an empty DB and a clean `/data` directory.
+
+---
+
+## ⛔ Breaking change — upgrading from older installs
+This version introduces a new bootstrap path. To run the new wizard, you must deploy a clean instance:
+
+This will delete all existing data. Proceed only if you accept data loss.
+
+```bash
+# stop stack and remove ALL volumes for a clean first-run
+docker compose down -v
+docker volume rm <your_project>_pgdata <your_project>_uploads <your_project>_clamdb <your_project>_keypasser_data  # or `docker volume ls` then rm
+docker compose pull
+docker compose up -d
+```
+> After the clean deploy, visit your domain and complete the wizard.
 
 ---
 
@@ -82,33 +117,18 @@ volumes:
 | Key | Required | Example | Notes |
 |---|---|---|---|
 | `PORT` | no | `1313` | Container listens here |
-| `DATABASE_URL` | yes | `postgres://user:pass@db:5432/keypasser` | Postgres 13+ |
 | `BASE_URL` | yes | `https://your.domain.tld` | Used in links/emails & CSRF origin check |
 | `COOKIE_SECURE` | recommended | `true` | Set `false` only without HTTPS/proxy |
 | `TRUST_PROXY` | optional | `1` | If behind reverse proxy |
-| `ADMIN_EMAIL` | optional | `admin@example.com` | Seed/ensure admin |
-| `ADMIN_PASSWORD_HASH` | optional | `$argon2id$...` | **Argon2id** (recommended); `$` must always be doubled after initial Setup in `.env`|
-| `ADMIN_USERNAME` | optional | `admin` | Only set if seeding admin |
-| `ADMIN_FIRST_NAME` | optional | `Admin` | 〃 |
-| `ADMIN_LAST_NAME` | optional | `User` | 〃 |
 | `KP_VERSION` | optional | `x.y.z` | Image tag (semver) |
 | `DOCKERHUB_REPO` | optional | `pamsler/keypasser` | Used by update checker |
 ```env
 PORT=1313
-DATABASE_URL=postgres://keypasser:change_me@db:5432/keypasser
 ROTATE_SESSION_SECRET_DAYS=90
 ROTATE_MASTER_KEY_DAYS=180
 BASE_URL=https://your.domain.tld
 COOKIE_SECURE=true
 TRUST_PROXY=1
-
-
-# Admin seed (optional; bcrypt, $ doubled)
-ADMIN_EMAIL=admin@example.com
-ADMIN_PASSWORD_HASH="$argon2id$v=19$m=19456,t=3,p=1$<salt>$<hash>"
-ADMIN_USERNAME=admin
-ADMIN_FIRST_NAME=Admin
-ADMIN_LAST_NAME=User
 
 # Image tag / version
 KP_VERSION=x.x.x
