@@ -1,7 +1,7 @@
 # 🔒 KeyPasser
 
 One-time secrets & files — secure, simple, self-hosted.  
-Now with **integrated ClamAV malware scanning**, **admin alerts**, an **installable PWA with custom logo**, and **user profile pictures**.  
+Now with **integrated ClamAV malware scanning**, **admin alerts**, an **installable PWA with custom logo**, **user profile pictures**, and **SSO deprovisioning (Entra ID)**.  
 
 ---
 
@@ -57,7 +57,7 @@ After setup you can **install KeyPasser as a PWA** (Add to Home Screen / Install
 ### Notes
 - `clamdb` caches antivirus signatures between restarts (faster startup). Allow outbound to `database.clamav.net`
 - `keypasser_data` persists `/data/config.json` which stores DB connection and setup state.
-- `uploads` stores branded logos and **user profile pictures**.  
+- `uploads` stores branded logos and **user profile pictures** (incl. SSO avatar auto-sync when Graph app-only is configured).  
 ---
 
 ## 🧭 First-Run Setup (wizard)
@@ -116,11 +116,12 @@ docker compose up -d app
 - **One-Time Links**: Links with configurable TTL (1 min to 24h) auto-delete after first view/download or expiry.
 - **SMTP Integration**: Supports SMTP (587/465) with custom subject/message and optional branded logo in emails.
 - **Authentication**: Local accounts or Entra ID SSO. Optional group-based access control for users and admins.
+- **SSO Deprovisioning**: Automatically prunes SSO users removed in Entra ID every 6h, plus a manual **“Check SSO deprovisioning”** button in *Users*. Built-in safety guard: aborts if >50% of SSO users would be deleted.
 - **Multi-Factor Authentication**: TOTP with backup codes for local accounts.
 - **Auditing & Reporting**: Audit logs, 14-day activity charts, and exportable reports in CSV, PDF, or XLSX formats.
 - **User Interface**: Clean, responsive Tailwind CSS UI with dark/light modes and EN/DE language support (auto-detect + switcher).
 - **Installable PWA**: Works as a Progressive Web App. Upload your logo in **Settings → Logo** and it’s applied to the app header/sidebar, favicon, emails, and PWA icons (Home-Screen).
-- **Profile pictures (avatars)**: Users can upload and manage their avatar in **Profile → Avatar** (PNG/JPG/WEBP/GIF, up to 5 MB). Avatars are shown in the UI (topbar/sidebar) and stored in the `uploads` volume.
+- **Profile pictures (avatars)**: Users can upload and manage their avatar in **Profile → Avatar** (PNG/JPG/WEBP/GIF, up to 5 MB). For SSO users, avatars are auto-fetched from Microsoft Graph when app-only is configured. Stored in the `uploads` volume.
 - **One-Time File Sharing**: Encrypted file uploads (up to 20MB) with one-time download and auto-deletion.
 - Malware Scanning & File-Type Blocking: Uploads are streamed to ClamAV (clamd); EICAR and known malware are blocked.
 - Admin Notifications: When a malicious file is detected, an alert email is sent to the default admin (ADMIN_EMAIL) with user, file name/type/size, IP, and timestamp. Localized EN/DE.
