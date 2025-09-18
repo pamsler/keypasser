@@ -1,7 +1,7 @@
 # 🔒 KeyPasser
 
 One-time secrets & files — secure, simple, self-hosted.  
-Now with **integrated ClamAV malware scanning**, **admin alerts**, and an **installable PWA with custom logo**.  
+Now with **integrated ClamAV malware scanning**, **admin alerts**, an **installable PWA with custom logo**, and **user profile pictures**.  
 
 ---
 
@@ -57,7 +57,7 @@ After setup you can **install KeyPasser as a PWA** (Add to Home Screen / Install
 ### Notes
 - `clamdb` caches antivirus signatures between restarts (faster startup). Allow outbound to `database.clamav.net`
 - `keypasser_data` persists `/data/config.json` which stores DB connection and setup state.
-
+- `uploads` stores branded logos and **user profile pictures**.  
 ---
 
 ## 🧭 First-Run Setup (wizard)
@@ -120,6 +120,7 @@ docker compose up -d app
 - **Auditing & Reporting**: Audit logs, 14-day activity charts, and exportable reports in CSV, PDF, or XLSX formats.
 - **User Interface**: Clean, responsive Tailwind CSS UI with dark/light modes and EN/DE language support (auto-detect + switcher).
 - **Installable PWA**: Works as a Progressive Web App. Upload your logo in **Settings → Logo** and it’s applied to the app header/sidebar, favicon, emails, and PWA icons (Home-Screen).
+- **Profile pictures (avatars)**: Users can upload and manage their avatar in **Profile → Avatar** (PNG/JPG/WEBP/GIF, up to 5 MB). Avatars are shown in the UI (topbar/sidebar) and stored in the `uploads` volume.
 - **One-Time File Sharing**: Encrypted file uploads (up to 20MB) with one-time download and auto-deletion.
 - Malware Scanning & File-Type Blocking: Uploads are streamed to ClamAV (clamd); EICAR and known malware are blocked.
 - Admin Notifications: When a malicious file is detected, an alert email is sent to the default admin (ADMIN_EMAIL) with user, file name/type/size, IP, and timestamp. Localized EN/DE.
