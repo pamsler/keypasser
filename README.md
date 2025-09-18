@@ -77,10 +77,10 @@ Select language.
 
 ---
 
-## ⛔ Breaking change — upgrading from older installs
-This version introduces a new bootstrap path. To run the new wizard, you must deploy a clean instance:
+## ⛔ Breaking change — upgrading **from v1.3.3 to v2.0.0**
+v2 introduces a new bootstrap/setup path. **When coming from any v1.x (incl. 1.3.3) you MUST deploy a clean instance**:
 
-This will delete all existing data. Proceed only if you accept data loss.
+This removes all existing data. Proceed only if you accept data loss.
 
 ```bash
 # stop stack and remove ALL volumes for a clean first-run
@@ -89,7 +89,23 @@ docker volume rm <your_project>_pgdata <your_project>_uploads <your_project>_cla
 docker compose pull
 docker compose up -d
 ```
-> After the clean deploy, visit your domain and complete the wizard.
+> After the clean deploy, visit your domain and complete the setup wizard once.
+
+## ➡️ Upgrading from v2.0.0 to any v2.x.x
+No database/volume reset is required. All volumes (`pgdata`, `uploads`, `clamdb`, `keypasser_data`) are kept and the wizard will **not** run again.
+
+**Option A — use the provided update script**
+
+**Option B — update the tag manually**
+1) Edit `.env` and change:
+```env
+KP_VERSION=2.x.x
+```
+2) Pull & restart just the app:
+```bash
+docker compose pull app
+docker compose up -d app
+```
 
 ---
 
