@@ -1,8 +1,7 @@
 # 🔒 KeyPasser
 
 One-time secrets & files — secure, simple, self-hosted.  
-Now with **integrated ClamAV malware scanning** and **admin alerts** on blocked uploads.  
-Send a link (or email) that auto-expires and is destroyed on first access. Local login or icrosoft Entra ID (Azure AD) SSO.
+Now with **integrated ClamAV malware scanning**, **admin alerts**, and an **installable PWA with custom logo**.  
 
 ---
 
@@ -53,6 +52,7 @@ volumes:
 
 ```
 ➡️ Open https://your.domain.tld, choose your language (EN/DE), and follow the First-Run Setup wizard.
+After setup you can **install KeyPasser as a PWA** (Add to Home Screen / Install app) on iOS/Android/Desktop.
 
 ### Notes
 - `clamdb` caches antivirus signatures between restarts (faster startup). Allow outbound to `database.clamav.net`
@@ -103,12 +103,26 @@ docker compose up -d
 - **Multi-Factor Authentication**: TOTP with backup codes for local accounts.
 - **Auditing & Reporting**: Audit logs, 14-day activity charts, and exportable reports in CSV, PDF, or XLSX formats.
 - **User Interface**: Clean, responsive Tailwind CSS UI with dark/light modes and EN/DE language support (auto-detect + switcher).
+- **Installable PWA**: Works as a Progressive Web App. Upload your logo in **Settings → Logo** and it’s applied to the app header/sidebar, favicon, emails, and PWA icons (Home-Screen).
 - **One-Time File Sharing**: Encrypted file uploads (up to 20MB) with one-time download and auto-deletion.
 - Malware Scanning & File-Type Blocking: Uploads are streamed to ClamAV (clamd); EICAR and known malware are blocked.
 - Admin Notifications: When a malicious file is detected, an alert email is sent to the default admin (ADMIN_EMAIL) with user, file name/type/size, IP, and timestamp. Localized EN/DE.
 
 ---
 
+## 📱 Progressive Web App (PWA)
+
+- **Install**: Visit your site and choose *Install app* / *Add to Home Screen*.  
+- **Branding**: Upload a square PNG/SVG in **Settings → Logo**. The app updates:
+  - Topbar & sidebar logo
+  - Favicon & Apple touch icon
+  - PWA icons/manifest (`/manifest.webmanifest`, `/pwa/icon-192.png`, `/pwa/icon-512.png`)
+  - Branded emails (inline logo)
+- **Updates**: The service worker refreshes on reload. After changing the logo, do a hard efresh; iOS may cache icons longer.
+
+No extra config is required in Docker; all PWA assets are served by the app.
+
+---
 
 ## ⚙️ Environment (.env)
 
