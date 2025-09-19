@@ -1,7 +1,7 @@
 # 🔒 KeyPasser
 
 One-time secrets & files — secure, simple, self-hosted.  
-Now with **integrated ClamAV malware scanning**, **admin alerts**, an **installable PWA with custom logo**, **user profile pictures**, and **SSO deprovisioning (Entra ID)**.  
+Now with **integrated ClamAV malware scanning**, **admin alerts**, an **installable PWA with custom logo**, **user profile pictures**, **SSO deprovisioning (Entra ID)**, and **single or multiple file sending (auto-ZIP)**.  
 
 ---
 
@@ -113,7 +113,7 @@ docker compose up -d app
 
 - **Secure Encryption**: Data encrypted at rest using `libsodium` (`crypto_secretbox`) with `HKDF`-derived keys. User passwords and tokens hashed with `Argon2id` (memoryCost: 19MiB, timeCost: 3, parallelism: 1).
 - **Password-Protected Secrets**: Optional recipient password with `Argon2id`-derived key combined with base key.
-- **One-Time Links**: Links with configurable TTL (1 min to 24h) auto-delete after first view/download or expiry.
+- **One-Time File Sharing**: Encrypted uploads (up to 20MB) with one-time download and auto-deletion — send a **single file** or **multiple files** at once. Multiple files are **auto-bundled into a ZIP** on-the-fly and delivered via a one-time link.
 - **SMTP Integration**: Supports SMTP (587/465) with custom subject/message and optional branded logo in emails.
 - **Authentication**: Local accounts or Entra ID SSO. Optional group-based access control for users and admins.
 - **SSO Deprovisioning**: Automatically prunes SSO users removed in Entra ID every 6h, plus a manual **“Check SSO deprovisioning”** button in *Users*. Built-in safety guard: aborts if >50% of SSO users would be deleted.
@@ -125,6 +125,16 @@ docker compose up -d app
 - **One-Time File Sharing**: Encrypted file uploads (up to 20MB) with one-time download and auto-deletion.
 - Malware Scanning & File-Type Blocking: Uploads are streamed to ClamAV (clamd); EICAR and known malware are blocked.
 - Admin Notifications: When a malicious file is detected, an alert email is sent to the default admin (ADMIN_EMAIL) with user, file name/type/size, IP, and timestamp. Localized EN/DE.
+
+---
+
+## 📦 Single or multiple files
+
+- **Single file**: Works as before — the recipient gets a one-time download link.
+- **Multiple files**: Select or drag-and-drop several files; KeyPasser **packages them into a ZIP** and creates one one-time link.
+- **Security & UX**: The same TTL, password protection, malware scanning, and branded email apply to both modes.
+
+> Note: The ZIP is created server-side just-in-time and is destroyed after the first successful download or expiry.
 
 ---
 
